@@ -348,6 +348,102 @@ button {
 
 <script>
 
+let productScanned = false;
+let productLocked = false;
+
+let productImage = null;
+
+
+function scanProduct() {
+
+    if (productLocked) {
+
+        alert(
+            "Produk sudah dikunci. Tekan STOP sebelum memilih produk lain."
+        );
+
+        return;
+    }
+
+
+    if (!cameraStream) {
+
+        alert(
+            "Silakan aktifkan kamera terlebih dahulu."
+        );
+
+        return;
+    }
+
+
+    const canvas =
+        document.createElement("canvas");
+
+    const ctx =
+        canvas.getContext("2d");
+
+
+    canvas.width = video.videoWidth;
+
+    canvas.height = video.videoHeight;
+
+
+    ctx.drawImage(
+        video,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+
+    productImage =
+        canvas.toDataURL("image/jpeg", 0.9);
+
+
+    productScanned = true;
+
+
+    document.getElementById(
+        "productStatus"
+    ).innerHTML =
+        "🟢 Produk berhasil di-scan";
+
+
+    document.getElementById(
+        "lockButton"
+    ).disabled = false;
+
+}
+
+
+function lockProduct() {
+
+    if (!productScanned) {
+
+        alert(
+            "Scan produk terlebih dahulu."
+        );
+
+        return;
+    }
+
+
+    productLocked = true;
+
+
+    document.getElementById(
+        "productStatus"
+    ).innerHTML =
+        "🔒 PRODUK TERKUNCI";
+
+
+    document.getElementById(
+        "lockButton"
+    ).disabled = true;
+
+}
+
 let video =
     document.getElementById("camera");
 
