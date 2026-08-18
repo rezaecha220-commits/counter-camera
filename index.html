@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0,
+               maximum-scale=1.0, user-scalable=no">
+
+<title>Counter Kamera</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: #101722;
+    color: white;
+    font-family: Arial, sans-serif;
+}
+
+.header {
+    text-align: center;
+    padding: 18px 10px;
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 24px;
+}
+
+.header p {
+    margin-top: 7px;
+    color: #aeb8c7;
+}
+
+.container {
+    width: 100%;
+    max-width: 700px;
+    margin: auto;
+    padding: 10px;
+}
+
+/* CAMERA */
+
+.camera-box {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    background: black;
+    border-radius: 18px;
+    overflow: hidden;
+}
+
+#camera {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* GARIS HITUNG */
+
+.count-line {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    border-top: 4px solid #00ff66;
+    box-shadow: 0 0 12px #00ff66;
+}
+
+.line-label {
+    position: absolute;
+    top: calc(50% - 35px);
+    right: 10px;
+
+    background: #00ff66;
+    color: #001b0a;
+
+    padding: 6px 10px;
+    border-radius: 8px;
+
+    font-size: 12px;
+    font-weight: bold;
+}
+
+/* COUNTER */
+
+.counter {
+    background: #182235;
+    border-radius: 16px;
+    text-align: center;
+    padding: 18px;
+    margin-top: 15px;
+}
+
+.counter-title {
+    color: #aeb8c7;
+    font-size: 15px;
+}
+
+#total {
+    font-size: 60px;
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+/* BUTTON */
+
+.buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+button {
+    flex: 1;
+    border: none;
+    border-radius: 12px;
+
+    padding: 15px;
+
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.start {
+    background: #00e676;
+    color: #00220d;
+}
+
+.reset {
+    background: #29364c;
+    color: white;
+}
+
+.status {
+    text-align: center;
+    margin-top: 13px;
+    color: #b7c2d4;
+    font-size: 14px;
+}
+
+/* INFO */
+
+.info {
+    background: #182235;
+    margin-top: 15px;
+    padding: 15px;
+    border-radius: 12px;
+
+    color: #aeb8c7;
+    font-size: 13px;
+    line-height: 1.6;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+
+    <h1>📦 Counter Kamera</h1>
+
+    <p>
+        Penghitung benda melewati kamera
+    </p>
+
+</div>
+
+
+<div class="container">
+
+    <!-- CAMERA -->
+
+    <div class="camera-box">
+
+        <video
+            id="camera"
+            autoplay
+            playsinline
+            muted>
+        </video>
+
+        <div class="count-line"></div>
+
+        <div class="line-label">
+            GARIS HITUNG
+        </div>
+
+    </div>
+
+
+    <!-- COUNTER -->
+
+    <div class="counter">
+
+        <div class="counter-title">
+            TOTAL BENDA
+        </div>
+
+        <div id="total">
+            0
+        </div>
+
+    </div>
+
+
+    <!-- BUTTON -->
+
+    <div class="buttons">
+
+        <button
+            class="start"
+            onclick="startCamera()">
+
+            📷 MULAI KAMERA
+
+        </button>
+
+
+        <button
+            class="reset"
+            onclick="resetCounter()">
+
+            🔄 RESET
+
+        </button>
+
+    </div>
+
+
+    <!-- STATUS -->
+
+    <div
+        id="status"
+        class="status">
+
+        Kamera belum aktif
+
+    </div>
+
+
+    <!-- INFO -->
+
+    <div class="info">
+
+        <b>Cara menggunakan:</b>
+
+        <br><br>
+
+        1. Tekan <b>Mulai Kamera</b>.
+
+        <br>
+
+        2. Izinkan Safari mengakses kamera.
+
+        <br>
+
+        3. Arahkan kamera ke conveyor.
+
+        <br>
+
+        4. Letakkan garis hijau pada jalur benda.
+
+        <br>
+
+        5. Saat benda melewati garis,
+        counter akan bertambah.
+
+    </div>
+
+</div>
+
+
+<script>
+
+let video =
+    document.getElementById("camera");
+
+let total =
+    document.getElementById("total");
+
+let statusText =
+    document.getElementById("status");
+
+
+let counter = 0;
+
+let cameraStream = null;
+
+let previousImage = null;
+
+let lastCountTime = 0;
+
+
+/* =========================
+   MULAI KAMERA
+========================= */
+
+async function startCamera() {
+
+    try {
+
+        cameraStream =
+            await navigator.mediaDevices.getUserMedia({
+
+                video: {
+
+                    facingMode: {
+                        ideal: "environment"
+                    },
+
+                    width: {
+                        ideal: 1280
+                    },
+
+                    height: {
+                        ideal: 720
+                    }
+
+                },
+
+                audio: false
+
+            });
+
+
+        video.srcObject =
+            cameraStream;
+
+
+        statusText.innerHTML =
+            "🟢 Kamera aktif";
+
+
+        startDetection();
+
+
+    }
+
+    catch(error) {
+
+        console.error(error);
+
+        statusText.innerHTML =
+            "❌ Kamera tidak dapat digunakan. Izinkan akses kamera Safari.";
+
+    }
+
+}
+
+
+/* =========================
+   RESET
+========================= */
+
+function resetCounter() {
+
+    counter = 0;
+
+    total.innerHTML =
+        counter;
+
+}
+
+
+/* =========================
+   DETECTION
+========================= */
+
+function startDetection() {
+
+    const canvas =
+        document.createElement("canvas");
+
+    const ctx =
+        canvas.getContext("2d", {
+            willReadFrequently: true
+        });
+
+
+    canvas.width = 160;
+
+    canvas.height = 90;
+
+
+    function detect() {
+
+        if (
+            video.readyState >= 2 &&
+            video.videoWidth > 0
+        ) {
+
+            /*
+             * Ambil bagian tengah kamera.
+             * Bagian ini dianggap sebagai
+             * area garis penghitung.
+             */
+
+            ctx.drawImage(
+
+                video,
+
+                0,
+                video.videoHeight * 0.45,
+
+                video.videoWidth,
+                video.videoHeight * 0.10,
+
+                0,
+                0,
+
+                canvas.width,
+                canvas.height
+
+            );
+
+
+            const image =
+                ctx.getImageData(
+                    0,
+                    0,
+                    canvas.width,
+                    canvas.height
+                );
+
+
+            let brightness = 0;
+
+
+            for (
+                let i = 0;
+                i < image.data.length;
+                i += 4
+            ) {
+
+                brightness +=
+                    image.data[i] +
+                    image.data[i + 1] +
+                    image.data[i + 2];
+
+            }
+
+
+            brightness =
+                brightness /
+                (image.data.length / 4);
+
+
+            /*
+             * Perubahan gambar besar
+             * dianggap sebagai benda
+             * yang melewati garis.
+             */
+
+            if (
+                previousImage !== null
+            ) {
+
+                const difference =
+                    Math.abs(
+                        brightness -
+                        previousImage
+                    );
+
+
+                const now =
+                    Date.now();
+
+
+                /*
+                 * Minimal 1 detik
+                 * antar hitungan.
+                 */
+
+                if (
+                    difference > 35 &&
+                    now - lastCountTime > 1000
+                ) {
+
+                    counter++;
+
+                    total.innerHTML =
+                        counter;
+
+                    lastCountTime =
+                        now;
+
+                }
+
+            }
+
+
+            previousImage =
+                brightness;
+
+        }
+
+
+        requestAnimationFrame(
+            detect
+        );
+
+    }
+
+
+    detect();
+
+}
+
+</script>
+
+</body>
+</html>
